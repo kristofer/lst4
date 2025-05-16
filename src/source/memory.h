@@ -40,7 +40,7 @@ struct byteObject {
 	unsigned char bytes[0];
 };
 
-# define BytesPerWord 4
+# define BytesPerWord 4 //maybe 2?
 # define bytePtr(x) (((struct byteObject *) x)->bytes)
 #define WORDSUP(ptr, amt) ((struct object *)(((char *)(ptr)) + \
 	((amt) * BytesPerWord)))
@@ -53,6 +53,7 @@ struct byteObject {
  * aligned and are proper C memory pointers.
  */
  // this may need to be modified to 24 bits, ala Agon ADL
+ // actually maybe 16?
 #include <limits.h>
 
 #define IS_SMALLINT(x) ((((int)(x)) & 0x01) != 0)
@@ -65,7 +66,7 @@ struct byteObject {
 /*
  * The "size" field is the top 30 bits; the bottom two are flags
  */
- // here is will need to be 24 bits as well.
+ // here this will need to be 24 bits as well.
 #define SIZE(op) ((op)->size >> 2)
 #define SETSIZE(op, val) ((op)->size = ((val) << 2))
 #define FLAG_GCDONE (0x01)
