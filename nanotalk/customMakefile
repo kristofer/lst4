@@ -1,0 +1,85 @@
+# Makefile for NanoTalk - A minimal Smalltalk system for Agon Light
+#
+# Supports both native development builds and cross-compilation for Agon
+
+# Compiler settings
+CC_NATIVE = gcc
+CC_AGON = ez80-none-elf-clang #ez80-clang
+
+# Flags for native build (development/testing)
+CFLAGS_NATIVE = -Wall -g -O0
+
+# Flags for Agon Light target
+CFLAGS_AGON =  -Wall -I. -Os
+
+# Source files
+SRCS = main.c simple_memory.c simple_object.c simple_interp.c
+
+# Object files for native build
+OBJS_NATIVE = $(SRCS:.c=.o)
+
+# Object files for Agon build
+OBJS_AGON = $(SRCS:.c=.agon.o)
+
+# Output binaries
+TARGET_NATIVE = nanotalk
+TARGET_AGON = nanotalk.bin
+
+# Default target (native build for testing)
+all: native
+
+# Build for native testing
+native: $(TARGET_NATIVE)
+
+# Build for Agon Light
+agon: $(TARGET_AGON)
+
+# Clean up
+clean:
+	rm -f $(OBJS_NATIVE) $(OBJS_AGON) $(TARGET_NATIVE) $(TARGET_AGON)
+	rm -f *.map *.lst *.sym
+
+# Native build rules
+$(TARGET_NATIVE): $(OBJS_NATIVE)
+	$(CC_NATIVE) $(CFLAGS_NATIVE) $^ -o $@
+
+%.o: %.c
+	$(CC_NATIVE) $(CFLAGS_NATIVE) -c $< -o $@
+
+# Agon build rules
+$(TARGET_AGON): $(OBJS_AGON)
+	$(CC_AGON) $(CFLAGS_AGON) $^ -o $@
+
+%.agon.o: %.c
+	$(CC_AGON) $(CFLAGS_AGON) -c $< -o $@
+
+# Test target
+test: native
+	./$(TARGET_NATIVE)
+
+# Special rule to create test.c
+test.o: simple_test.h
+	$(CC_NATIVE) $(CFLAGS_NATIVE) -x c -c $< -o $@
+
+test_run: test.o $(filter-out main.o, $(OBJS_NATIVE))
+	$(CC_NATIVE) $(CFLAGS_NATIVE) $^ -o test_nanotalk
+	./test_nanotalk
+
+# Install target for Agon (adjust path as needed)
+install: $(TARGET_AGON)
+	cp $(TARGET_AGON) /path/to/agon/files/
+
+# Help message
+help:
+	@echo "NanoTalk Makefile Usage:"
+	@echo "  make              - Build native version for testing"
+	@echo "  make native       - Same as above"
+	@echo "  make agon         - Build for Agon Light target"
+	@echo "  make test         - Run the REPL on the host system"
+	@echo "  make test_run     - Build and run the test framework"
+	@echo "  make clean        - Remove all built files"
+	@echo "  make install      - Install to Agon (adjust path in Makefile)"
+	@echo "  make help         - Show this help message"
+
+# Phony targets
+.PHONY: all native agon clean test install help test_run
